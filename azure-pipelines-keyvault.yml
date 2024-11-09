@@ -36,7 +36,7 @@ steps:
     scriptType: 'ps'
     scriptLocation: 'inlineScript'
     inlineScript: |
-      az keyvault create --name $(keyVaultName) --resource-group $(resourceGroupName) --location $(location) --enable-rbac-authorization
+      az keyvault create --name $(keyVaultName) --resource-group $(resourceGroupName) --location $(location)
 
 # Attribuer le rôle temporaire "Key Vault Secrets User" à la connexion de service pour accéder au Key Vault
 - task: AzureCLI@2
