@@ -20,27 +20,6 @@ variables:
 steps:
 - checkout: self  # Clonage du dépôt
 
-# Étape pour supprimer le groupe de ressources s'il existe déjà
-- task: AzureCLI@2
-  displayName: 'Supprimer le Groupe de Ressource existant pour le KeyVault'
-  inputs:
-    azureSubscription: $(azureSubscription)
-    scriptType: 'ps'
-    scriptLocation: 'inlineScript'
-    inlineScript: |
-      $rgExists = az group exists --name $(resourceGroupName)
-      if ($rgExists -eq "true") {
-        $rgState = az group show --name $(resourceGroupName) --query "properties.provisioningState" -o tsv
-        if ($rgState -eq "Deleting") {
-          Write-Host "Le groupe de ressources est en cours de suppression. Attente de la fin de la suppression..."
-          Start-Sleep -Seconds 30  # Attendre 30 secondes avant de vérifier à nouveau
-        }
-        az group delete --name $(resourceGroupName) --yes --no-wait
-      } else {
-        Write-Host "Le groupe de ressources n'existe pas. Aucune suppression nécessaire."
-      }
-
-
 - task: AzureCLI@2
   displayName: 'Crée le Groupe de Ressource pour le KeyVault'
   inputs:
@@ -68,7 +47,7 @@ steps:
     scriptLocation: 'inlineScript'
     inlineScript: |
       # Récupérer l'identité du principal de service utilisé par la connexion
-      $servicePrincipalObjectId = $(AZURE_CLIENT_ID)  # ID du client (Client ID) de la connexion
+      $servicePrincipalObjectId = $(AZURE_CLIENT_ID)
       az role assignment create --role "Key Vault Secrets User" --assignee-object-id $servicePrincipalObjectId --scope "/subscriptions/$(subscriptionId)/resourceGroups/$(resourceGroupName)/providers/Microsoft.KeyVault/vaults/$(keyVaultName)"
 
 # Ajouter un secret dans le Key Vault
