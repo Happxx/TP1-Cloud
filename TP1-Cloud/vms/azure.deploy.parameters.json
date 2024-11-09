@@ -1,0 +1,191 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "value": "eastus"
+        },
+        "osDiskType": {
+            "value": "Standard_LRS"
+        },
+        "virtualNetworkId": {
+            "value": "/subscriptions/4c81e1c9-c015-4674-b82f-01ae9f22232e/resourceGroups/loic/providers/Microsoft.Network/virtualNetworks/vnet-eastus"
+        },
+        "virtualNetworkName": {
+            "value": "vnet-eastus"
+        },
+        "networkSecurityGroups": {
+            "value": [
+                {
+                    "name": "basicNsgvnet-eastus-nic01",
+                    "id": "/subscriptions/4c81e1c9-c015-4674-b82f-01ae9f22232e/resourceGroups/loic/providers/Microsoft.Network/networkSecurityGroups/basicNsgvnet-eastus-nic01",
+                    "rules": [
+                        {
+                            "name": "Tcp",
+                            "properties": {
+                                "priority": 300,
+                                "protocol": "Tcp",
+                                "access": "Allow",
+                                "direction": "Inbound",
+                                "sourceAddressPrefix": "*",
+                                "sourcePortRange": "*",
+                                "destinationAddressPrefix": "*",
+                                "destinationPortRange": "80"
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        "networkInterfaceConfigurations": {
+            "value": [
+                {
+                    "name": "vnet-eastus-nic01",
+                    "primary": true,
+                    "subnetId": "/subscriptions/4c81e1c9-c015-4674-b82f-01ae9f22232e/resourceGroups/loic/providers/Microsoft.Network/virtualNetworks/vnet-eastus/subnets/snet-eastus-1",
+                    "applicationGatewayBackendAddressPools": [],
+                    "loadBalancerBackendAddressPools": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', parameters('loadBalancerName'), parameters('backendPoolName'))]"
+                        }
+                    ],
+                    "applicationSecurityGroups": [],
+                    "loadBalancerInboundNatPools": [],
+                    "enableAcceleratedNetworking": false,
+                    "nsgName": "basicNsgvnet-eastus-nic01",
+                    "nsgId": "/subscriptions/4c81e1c9-c015-4674-b82f-01ae9f22232e/resourceGroups/loic/providers/Microsoft.Network/networkSecurityGroups/basicNsgvnet-eastus-nic01",
+                    "pipName": "publicIp-vnet-eastus-nic01"
+                }
+            ]
+        },
+        "backendPoolName": {
+            "value": "bepool"
+        },
+        "loadBalancerName": {
+            "value": "TP1-Cloud-LB"
+        },
+        "loadbalancingRuleFrontEndPort": {
+            "value": 80
+        },
+        "loadbalancingRuleBackendEndPort": {
+            "value": 80
+        },
+        "loadbalancingRuleProtocol": {
+            "value": "Tcp"
+        },
+        "InboundNATRuleFrontEndPortRangeStart": {
+            "value": 50000
+        },
+        "vmName": {
+            "value": "TP1-Cloud-VMS"
+        },
+        "virtualMachineScaleSetName": {
+            "value": "TP1-Cloud-VMS"
+        },
+        "instanceCount": {
+            "value": "2"
+        },
+        "instanceSize": {
+            "value": "Standard_D2plds_v6"
+        },
+        "platformFaultDomainCount": {
+            "value": "1"
+        },
+        "scaleInPolicy": {
+            "value": {
+                "rules": [
+                    "Default"
+                ],
+                "forceDeletion": false
+            }
+        },
+        "upgradePolicy": {
+            "value": "Manual"
+        },
+        "hibernationEnabled": {
+            "value": false
+        },
+        "adminUsername": {
+            "value": "vmsadmin"
+        },
+        "adminPassword": {
+            "value": null
+        },
+        "customData": {
+            "value": null
+        },
+        "securityType": {
+            "value": "TrustedLaunch"
+        },
+        "secureBoot": {
+            "value": true
+        },
+        "vTPM": {
+            "value": true
+        },
+        "healthExtensionProtocol": {
+            "value": "http"
+        },
+        "healthExtensionPort": {
+            "value": 80
+        },
+        "healthExtensionRequestPath": {
+            "value": "/"
+        },
+        "autoRepairsPolicyEnabled": {
+            "value": false
+        },
+        "gracePeriod": {
+            "value": "PT10M"
+        },
+        "autoRepairsAction": {
+            "value": "Replace"
+        },
+        "vnetLocation": {
+            "value": "eastus"
+        },
+        "vnetExtendedLocation": {
+            "value": {}
+        },
+        "vnetVirtualNetworkName": {
+            "value": "vnet-eastus"
+        },
+        "vnetResourceGroupName": {
+            "value": "loic"
+        },
+        "vnetDeploymentName": {
+            "value": "network-interface-associated-virtual-network-20241109132000"
+        },
+        "vnetNatGatewaysWithNewPublicIpAddress": {
+            "value": []
+        },
+        "vnetNatGatewaysWithoutNewPublicIpAddress": {
+            "value": []
+        },
+        "vnetNatGatewayPublicIpAddressesNewNames": {
+            "value": []
+        },
+        "vnetNetworkSecurityGroupsNew": {
+            "value": []
+        },
+        "vnetProperties": {
+            "value": {
+                "subnets": [
+                    {
+                        "name": "snet-eastus-1",
+                        "properties": {
+                            "addressPrefixes": [
+                                "172.16.0.0/24"
+                            ]
+                        }
+                    }
+                ],
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "172.16.0.0/16"
+                    ]
+                }
+            }
+        }
+    }
+}
