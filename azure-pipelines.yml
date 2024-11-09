@@ -67,7 +67,7 @@ steps:
     scriptType: 'ps'
     scriptLocation: 'inlineScript'
     inlineScript: |
-      az role assignment delete --role "Key Vault Secrets User" --assignee $(AZURE_CLIENT_ID) --scope "/subscriptions/$(subscriptionId)/resourceGroups/$(resourceGroupName)/providers/Microsoft.KeyVault/vaults/$(keyVaultName)"
+      az role assignment delete --role "Key Vault Secrets User" --assignee $(AZURE_CLIENT_ID) --scope "/subscriptions/$(subscriptionId)/resourceGroups/$(resourceGroupNameKeyVault)/providers/Microsoft.KeyVault/vaults/$(keyVaultName)"
 
 # Étape 6 : Créer le groupe de ressources pour le Scale Set
 - task: AzureCLI@2
