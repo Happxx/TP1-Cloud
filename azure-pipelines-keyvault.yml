@@ -43,13 +43,13 @@ steps:
       az group create --name $(resourceGroupName) --location $(location)
 
 - task: AzureCLI@2
-  displayName: 'Deployer le KeyVault'
+  displayName: 'Déployer le KeyVault'
   inputs:
     azureSubscription: $(azureSubscription)
     scriptType: 'ps'
     scriptLocation: 'inlineScript'
     inlineScript: |
-      az keyvault create --name $keyVaultName --resource-group $resourceGroupName --location $location --enable-rbac-authorization
+      az keyvault create --name $(keyVaultName) --resource-group $(resourceGroupName) --location $(location) --enable-rbac-authorization
 
 - task: AzureCLI@2
   displayName: 'Ajouter un secret dans le KayVault'
