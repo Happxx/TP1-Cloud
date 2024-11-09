@@ -1,0 +1,61 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+  branches:
+    include:
+    - master
+
+pool: "Default"
+
+variables:
+  azureSubscription: 'Azure subscription 1'
+  resourceGroupName: 'KeyVaultResourceGroup'
+  location: 'eastus'
+  keyVaultName: 'TP1-KeyVault'
+  secretName: 'adminPassword'
+  secretValue: 'trestresSecret'
+
+steps:
+- task: AzureCLI@2
+  displayName: 'Crée le Groupe de Ressource pour le KeyVault'
+  inputs:
+    azureSubscription: $(azureSubscription)
+    scriptType: 'ps'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      az group create --name $(resourceGroupName) --location $(location)
+
+- task: AzureCLI@2
+  displayName: 'Deployer le KeyVault'
+  inputs:
+    azureSubscription: $(azureSubscription)
+    scriptType: 'ps'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      az keyvault create \
+        --name $(keyVaultName) \
+        --resource-group $(resourceGroupName) \
+        --location $(location)
+
+- task: AzureCLI@2
+  displayName: 'Ajouter un secret dans le KayVault'
+  inputs:
+    azureSubscription: $(azureSubscription)
+    scriptType: 'ps'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      # Générer un mot de passe aléatoire pour la VM et le stocker dans le Key Vault
+        $password = -join ((1..16) | ForEach-Object { (65..90) + (97..122) + (48..57) | Get-Random | % {[char]$_} })
+        az keyvault secret set --vault-name $(keyVaultName) --name $(secretName) --value $password
+
+- task: AzureCLI@2
+  displayName: 'Vérifier le mot de passe dans le KeyVault'
+  inputs:
+    azureSubscription: $(azureSubscription)
+    scriptType: 'ps'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      az keyvault secret show --vault-name $(keyVaultName) --name $(secretName)
