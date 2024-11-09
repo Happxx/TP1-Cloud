@@ -31,6 +31,7 @@ steps:
       $rgExists = az group exists --name $(resourceGroupName)
       if ($rgExists -eq "true") {
         az group delete --name $(resourceGroupName) --yes --no-wait
+        Start-Sleep -Seconds 30  # Attendre 30 secondes la fin de la suppression
       }
 
 - task: AzureCLI@2
