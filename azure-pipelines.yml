@@ -1,0 +1,53 @@
+trigger:
+  branches:
+    include:
+      - master  # Trigger the pipeline on changes to the main branch
+
+pool:
+  name: 'Default'  # Use the self-hosted agent
+
+variables:
+  azureSubscription: 'Azure subscription 1'
+  resourceGroupName: 'ScaleSetResourceGroup'
+  location: 'EastUS'
+  vmssAdminPassword: '$(adminPassword)'  # Stored securely in Key Vault
+
+steps:
+- checkout: self  # Clone the repository
+
+# Step 1: Create the Resource Group for the Scale Set
+- task: AzureCLI@2
+  displayName: 'Create Resource Group for Scale Set'
+  inputs:
+    azureSubscription: $(azureSubscription)
+    scriptType: 'ps'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      az group create --name $(resourceGroupName) --location $(location)
+
+# Step 2: Encode the cloud-init configuration
+- task: PowerShell@2
+  displayName: "Encode cloud-init.txt to base64"
+  inputs:
+    targetType: 'inline'
+    script: |
+      # Read and encode the content of cloud-init.txt in base64
+      $cloudContent = Get-Content -Path "$(Build.SourcesDirectory)\cloud-init.txt" -Raw
+      $encodedContent = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($cloudContent))
+      Write-Host "##vso[task.setvariable variable=encodedCloudInit;]$encodedContent"
+
+# Step 3: Deploy the Scale Set using ARM template with parameters and cloud-init
+- task: AzureResourceManagerTemplateDeployment@3
+  displayName: "Deploy Scale Set and NGINX web server"
+  inputs:
+    deploymentScope: 'Resource Group'
+    azureResourceManagerConnection: $(azureSubscription)
+    subscriptionId: 'your-subscription-id'  # Replace with your actual subscription ID
+    action: 'Create Or Update Resource Group'
+    resourceGroupName: $(resourceGroupName)
+    location: $(location)
+    templateLocation: 'Linked artifact'
+    csmFile: '$(Build.SourcesDirectory)\azuredeploy.json'
+    csmParametersFile: '$(Build.SourcesDirectory)\azure.deploy.parameters.json'
+    overrideParameters: '-adminPassword "$(vmssAdminPassword)" -customData "$(encodedCloudInit)"'
+    deploymentMode: 'Incremental'
