@@ -19,6 +19,8 @@ variables:
   secretValue: 'trestresSecret'
 
 steps:
+- checkout: self  # Clonage du dépôt
+
 - task: AzureCLI@2
   displayName: 'Crée le Groupe de Ressource pour le KeyVault'
   inputs:
