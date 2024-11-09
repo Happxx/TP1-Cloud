@@ -58,7 +58,7 @@ steps:
     inlineScript: |
       $password = -join ((1..16) | ForEach-Object { (65..90) + (97..122) + (48..57) | Get-Random | % {[char]$_} })
       az keyvault secret set --vault-name $(keyVaultName) --name $(secretName) --value $password
-      
+
 # Étape 6 : Créer le groupe de ressources pour le Scale Set
 - task: AzureCLI@2
   displayName: 'Créer le groupe de ressources pour le Scale Set'
@@ -71,13 +71,16 @@ steps:
 
 # Étape 7 : Encoder la configuration cloud-init en base64
 - task: PowerShell@2
-  displayName: "Encoder le fichier cloud-init en base64"
+  displayName: "Encoder le contenu Cloud-Init"
   inputs:
     targetType: 'inline'
     script: |
-      $cloudContent = Get-Content -Path "$(Build.SourcesDirectory)\cloud-init.txt" -Raw
+      # Lire le contenu du fichier cloud-init.txt
+      $cloudContent = Get-Content -Path "$(Build.SourcesDirectory)\TP1-Cloud\vms\cloud-init.txt" -Raw
+      # Encoder en base64
       $encodedContent = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($cloudContent))
-      Write-Host "##vso[task.setvariable variable=encodedCloudInit;]$encodedContent"
+      # Définir la variable CloudIniContent pour l'étape suivante
+      Write-Host "##vso[task.setvariable variable=CloudIniContent;]$encodedContent"
 
 # Étape 8 : Déployer le Scale Set avec le serveur NGINX
 - task: AzureResourceManagerTemplateDeployment@3
