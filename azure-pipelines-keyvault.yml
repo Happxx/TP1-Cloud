@@ -20,6 +20,19 @@ variables:
 steps:
 - checkout: self  # Clonage du dépôt
 
+# Étape pour supprimer le groupe de ressources s'il existe déjà
+- task: AzureCLI@2
+  displayName: 'Supprimer le Groupe de Ressource existant pour le KeyVault'
+  inputs:
+    azureSubscription: $(azureSubscription)
+    scriptType: 'ps'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      $rgExists = az group exists --name $(resourceGroupName)
+      if ($rgExists -eq "true") {
+        az group delete --name $(resourceGroupName) --yes --no-wait
+      }
+
 - task: AzureCLI@2
   displayName: 'Crée le Groupe de Ressource pour le KeyVault'
   inputs:
