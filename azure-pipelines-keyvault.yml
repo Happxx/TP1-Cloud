@@ -14,7 +14,7 @@ variables:
   azureSubscription: 'Azure subscription 1'
   resourceGroupName: 'KeyVaultResourceGroup'
   location: 'EastUS'
-  keyVaultName: 'TP1-KeyVault'
+  keyVaultName: 'TP1-KeyVault-$(Build.BuildId)'  # Utiliser un nom unique pour le KeyVault pour éviter les conflits
   secretName: 'adminPassword'
 
 steps:
