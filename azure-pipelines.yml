@@ -1,110 +1,106 @@
 trigger:
   branches:
     include:
-      - master  # Trigger the pipeline on changes to the main branch
+      - master  # Déclenche le pipeline sur les modifications de la branche principale
 
 pool:
-  name: 'Default'  # Use the self-hosted agent
+  name: 'Default'  # Utilisation de l'agent auto-hébergé
 
 variables:
   azureSubscription: 'Azure subscription 1'
+  resourceGroupNameKeyVault: 'KeyVaultResourceGroup'
+  resourceGroupNameScaleSet: 'ScaleSetResourceGroup'
   location: 'EastUS'
-  keyVaultResourceGroupName: 'KeyVaultResourceGroup'
-  scaleSetResourceGroupName: 'ScaleSetResourceGroup'
-  keyVaultName: 'TP1-KeyVault-$(Build.BuildId)'  # Unique name for Key Vault to avoid conflicts
+  keyVaultName: 'TP1-KeyVault-$(Build.BuildId)'  # Nom unique pour le Key Vault
   secretName: 'adminPassword'
-  vmssAdminPassword: '$(adminPassword)'  # Stored securely in Key Vault
 
 steps:
-- checkout: self  # Clone the repository
+- checkout: self  # Clonage du dépôt
 
-# Step 1: Create the Resource Group for the Key Vault
+# Étape 1 : Créer le groupe de ressources pour le Key Vault
 - task: AzureCLI@2
-  displayName: 'Create Resource Group for Key Vault'
+  displayName: 'Créer le groupe de ressources pour le Key Vault'
   inputs:
     azureSubscription: $(azureSubscription)
     scriptType: 'ps'
     scriptLocation: 'inlineScript'
     inlineScript: |
-      az group create --name $(keyVaultResourceGroupName) --location $(location)
+      az group create --name $(resourceGroupNameKeyVault) --location $(location)
 
-# Step 2: Deploy the Key Vault
+# Étape 2 : Déployer le Key Vault
 - task: AzureCLI@2
-  displayName: 'Deploy Key Vault'
+  displayName: 'Déployer le Key Vault'
   inputs:
     azureSubscription: $(azureSubscription)
     scriptType: 'ps'
     scriptLocation: 'inlineScript'
     inlineScript: |
-      az keyvault create --name $(keyVaultName) --resource-group $(keyVaultResourceGroupName) --location $(location) --enable-rbac-authorization
+      az keyvault create --name $(keyVaultName) --resource-group $(resourceGroupNameKeyVault) --location $(location) --enable-rbac-authorization
 
-# Step 3: Assign temporary "Key Vault Secrets User" role to the service principal for accessing the Key Vault
+# Étape 3 : Attribuer le rôle temporaire "Utilisateur des secrets du Key Vault"
 - task: AzureCLI@2
-  displayName: 'Assign Key Vault Secrets User role to service connection'
+  displayName: 'Attribuer le rôle Utilisateur des secrets du Key Vault'
   inputs:
     azureSubscription: $(azureSubscription)
     scriptType: 'ps'
     scriptLocation: 'inlineScript'
     inlineScript: |
       $servicePrincipalObjectId = "$(AZURE_CLIENT_ID)"
-      az role assignment create --role "Key Vault Secrets User" --assignee-object-id $servicePrincipalObjectId --assignee-principal-type "ServicePrincipal" --scope "/subscriptions/$(subscriptionId)/resourceGroups/$(keyVaultResourceGroupName)/providers/Microsoft.KeyVault/vaults/$(keyVaultName)"
+      az role assignment create --role "Key Vault Secrets User" --assignee-object-id $servicePrincipalObjectId --assignee-principal-type "ServicePrincipal" --scope "/subscriptions/$(subscriptionId)/resourceGroups/$(resourceGroupNameKeyVault)/providers/Microsoft.KeyVault/vaults/$(keyVaultName)"
 
-# Step 4: Add a secret to the Key Vault
+# Étape 4 : Ajouter un secret dans le Key Vault
 - task: AzureCLI@2
-  displayName: 'Add secret to Key Vault'
+  displayName: 'Ajouter un secret dans le Key Vault'
   inputs:
     azureSubscription: $(azureSubscription)
     scriptType: 'ps'
     scriptLocation: 'inlineScript'
     inlineScript: |
-      # Generate a random password for the VM and store it in the Key Vault
       $password = -join ((1..16) | ForEach-Object { (65..90) + (97..122) + (48..57) | Get-Random | % {[char]$_} })
       az keyvault secret set --vault-name $(keyVaultName) --name $(secretName) --value $password
-      Write-Host "##vso[task.setvariable variable=adminPassword]$password"
 
-# Step 5: Remove the "Key Vault Secrets User" role after adding the secret
+# Étape 5 : Retirer le rôle Utilisateur des secrets du Key Vault
 - task: AzureCLI@2
-  displayName: 'Remove Key Vault Secrets User role from service connection'
+  displayName: 'Retirer le rôle Utilisateur des secrets du Key Vault'
   inputs:
     azureSubscription: $(azureSubscription)
     scriptType: 'ps'
     scriptLocation: 'inlineScript'
     inlineScript: |
-      az role assignment delete --role "Key Vault Secrets User" --assignee-object-id $servicePrincipalObjectId --scope "/subscriptions/$(subscriptionId)/resourceGroups/$(keyVaultResourceGroupName)/providers/Microsoft.KeyVault/vaults/$(keyVaultName)"
+      az role assignment delete --role "Key Vault Secrets User" --assignee-object-id $servicePrincipalObjectId --scope "/subscriptions/$(subscriptionId)/resourceGroups/$(resourceGroupNameKeyVault)/providers/Microsoft.KeyVault/vaults/$(keyVaultName)"
 
-# Step 6: Create the Resource Group for the Scale Set
+# Étape 6 : Créer le groupe de ressources pour le Scale Set
 - task: AzureCLI@2
-  displayName: 'Create Resource Group for Scale Set'
+  displayName: 'Créer le groupe de ressources pour le Scale Set'
   inputs:
     azureSubscription: $(azureSubscription)
     scriptType: 'ps'
     scriptLocation: 'inlineScript'
     inlineScript: |
-      az group create --name $(scaleSetResourceGroupName) --location $(location)
+      az group create --name $(resourceGroupNameScaleSet) --location $(location)
 
-# Step 7: Encode the cloud-init configuration
+# Étape 7 : Encoder la configuration cloud-init en base64
 - task: PowerShell@2
-  displayName: "Encode cloud-init.txt to base64"
+  displayName: "Encoder le fichier cloud-init en base64"
   inputs:
     targetType: 'inline'
     script: |
-      # Read and encode the content of cloud-init.txt in base64
       $cloudContent = Get-Content -Path "$(Build.SourcesDirectory)\cloud-init.txt" -Raw
       $encodedContent = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($cloudContent))
       Write-Host "##vso[task.setvariable variable=encodedCloudInit;]$encodedContent"
 
-# Step 8: Deploy the Scale Set using ARM template with parameters and cloud-init
+# Étape 8 : Déployer le Scale Set avec le serveur NGINX
 - task: AzureResourceManagerTemplateDeployment@3
-  displayName: "Deploy Scale Set and NGINX web server"
+  displayName: "Déployer le Scale Set avec NGINX"
   inputs:
     deploymentScope: 'Resource Group'
     azureResourceManagerConnection: $(azureSubscription)
-    subscriptionId: 'your-subscription-id'  # Replace with your actual subscription ID
+    subscriptionId: $(subscriptionId)
     action: 'Create Or Update Resource Group'
-    resourceGroupName: $(scaleSetResourceGroupName)
+    resourceGroupName: $(resourceGroupNameScaleSet)
     location: $(location)
     templateLocation: 'Linked artifact'
     csmFile: '$(Build.SourcesDirectory)\azuredeploy.json'
     csmParametersFile: '$(Build.SourcesDirectory)\azuredeploy.parameters.json'
-    overrideParameters: '-adminPassword "$(vmssAdminPassword)" -customData "$(encodedCloudInit)"'
+    overrideParameters: '-adminPassword "$(adminPassword)" -customData "$(encodedCloudInit)"'
     deploymentMode: 'Incremental'
