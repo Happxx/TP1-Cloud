@@ -36,7 +36,7 @@ steps:
     scriptType: 'ps'
     scriptLocation: 'inlineScript'
     inlineScript: |
-      az keyvault create --name $(keyVaultName) --resource-group $(resourceGroupName) --location $(location)
+      az keyvault create --name $(keyVaultName) --resource-group $(resourceGroupName) --location $(location) --enable-rbac-authorization
 
 # Attribuer le rôle temporaire "Key Vault Secrets User" à la connexion de service pour accéder au Key Vault
 - task: AzureCLI@2
@@ -47,7 +47,8 @@ steps:
     scriptLocation: 'inlineScript'
     inlineScript: |
       $servicePrincipalObjectId = "$(AZURE_CLIENT_ID)"
-      az role assignment create --role "Key Vault Secrets User" --assignee-object-id $servicePrincipalObjectId --scope "/subscriptions/$(subscriptionId)/resourceGroups/$(resourceGroupName)/providers/Microsoft.KeyVault/vaults/$(keyVaultName)"
+      az role assignment create --role "Key Vault Secrets User" --assignee-object-id $servicePrincipalObjectId --assignee-principal-type "ServicePrincipal" --scope "/subscriptions/$(subscriptionId)/resourceGroups/$(resourceGroupName)/providers/Microsoft.KeyVault/vaults/$(keyVaultName)"
+
 
 
 # Ajouter un secret dans le Key Vault
