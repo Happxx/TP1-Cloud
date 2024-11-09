@@ -30,9 +30,16 @@ steps:
     inlineScript: |
       $rgExists = az group exists --name $(resourceGroupName)
       if ($rgExists -eq "true") {
+        $rgState = az group show --name $(resourceGroupName) --query "properties.provisioningState" -o tsv
+        if ($rgState -eq "Deleting") {
+          Write-Host "Le groupe de ressources est en cours de suppression. Attente de la fin de la suppression..."
+          Start-Sleep -Seconds 30  # Attendre 30 secondes avant de vérifier à nouveau
+        }
         az group delete --name $(resourceGroupName) --yes --no-wait
-        Start-Sleep -Seconds 30  # Attendre 30 secondes la fin de la suppression
+      } else {
+        Write-Host "Le groupe de ressources n'existe pas. Aucune suppression nécessaire."
       }
+
 
 - task: AzureCLI@2
   displayName: 'Crée le Groupe de Ressource pour le KeyVault'
