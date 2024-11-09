@@ -13,10 +13,9 @@ pool: "Default"
 variables:
   azureSubscription: 'Azure subscription 1'
   resourceGroupName: 'KeyVaultResourceGroup'
-  location: 'eastus'
+  location: 'EastUS'
   keyVaultName: 'TP1-KeyVault'
   secretName: 'adminPassword'
-  secretValue: 'trestresSecret'
 
 steps:
 - checkout: self  # Clonage du dépôt
@@ -37,10 +36,7 @@ steps:
     scriptType: 'ps'
     scriptLocation: 'inlineScript'
     inlineScript: |
-      az keyvault create \
-        --name $(keyVaultName) \
-        --resource-group $(resourceGroupName) \
-        --location $(location)
+      az keyvault create --name $keyVaultName --resource-group $resourceGroupName --location $location --enable-rbac-authorization
 
 - task: AzureCLI@2
   displayName: 'Ajouter un secret dans le KayVault'
