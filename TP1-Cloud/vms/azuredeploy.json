@@ -171,7 +171,7 @@
         },
         "vnetDeploymentName": {
             "type": "string",
-            "defaultValue": "network-interface-associated-virtual-network-20241109132000"
+            "defaultValue": "network-interface-associated-virtual-network-20241109140538"
         }
     },
     "variables": {
@@ -323,7 +323,7 @@
                         "capacity": {
                             "default": 2,
                             "minimum": 2,
-                            "maximum": 20
+                            "maximum": 4
                         },
                         "rules": [
                             {
@@ -332,10 +332,10 @@
                                     "metricResourceUri": "[variables('vmssId')]",
                                     "timeGrain": "PT1M",
                                     "statistic": "Average",
-                                    "timeWindow": "PT10M",
+                                    "timeWindow": "PT5M",
                                     "timeAggregation": "Average",
                                     "operator": "GreaterThan",
-                                    "threshold": "80"
+                                    "threshold": "50"
                                 },
                                 "scaleAction": {
                                     "cooldown": "PT5M",
@@ -350,16 +350,16 @@
                                     "metricResourceUri": "[variables('vmssId')]",
                                     "timeGrain": "PT1M",
                                     "statistic": "Average",
-                                    "timeWindow": "PT10M",
+                                    "timeWindow": "PT5M",
                                     "timeAggregation": "Average",
                                     "operator": "LessThan",
-                                    "threshold": "20"
+                                    "threshold": "30"
                                 },
                                 "scaleAction": {
                                     "cooldown": "PT5M",
                                     "direction": "Decrease",
                                     "type": "ChangeCount",
-                                    "value": "1"
+                                    "value": "2"
                                 }
                             }
                         ]
@@ -442,11 +442,6 @@
                                 }
                             }
                         ]
-                    },
-                    "diagnosticsProfile": {
-                        "bootDiagnostics": {
-                            "enabled": true
-                        }
                     },
                     "osProfile": {
                         "computerNamePrefix": "[variables('namingInfix')]",

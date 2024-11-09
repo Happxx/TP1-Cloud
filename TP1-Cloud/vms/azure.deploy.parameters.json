@@ -154,7 +154,7 @@
             "value": "loic"
         },
         "vnetDeploymentName": {
-            "value": "network-interface-associated-virtual-network-20241109132000"
+            "value": "network-interface-associated-virtual-network-20241109140538"
         },
         "vnetNatGatewaysWithNewPublicIpAddress": {
             "value": []
